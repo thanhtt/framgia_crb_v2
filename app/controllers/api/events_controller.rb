@@ -104,6 +104,7 @@ class Api::EventsController < ApplicationController
 
   def destroy_event event
     if event.destroy
+      NotificationDesktopService.new(@event, Settings.destroy_all_event).perform
       render json: {message: t("events.flashs.deleted")}, status: :ok
     else
       render json: {message: t("events.flashs.not_deleted")}
@@ -131,7 +132,9 @@ class Api::EventsController < ApplicationController
       return dup_event.save
     end
 
-    @event.update_attributes exception_type: exception_type
+    if @event.update_attributes exception_type: exception_type
+      NotificationDesktopService.new(@event, Settings.destroy_event).perform
+    end
   end
 
   def unpersisted_event?

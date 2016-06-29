@@ -1,5 +1,4 @@
 class NotificationDesktopJob < Struct.new(:event, :action_name)
-
   include NotifyDesktop
 
   def perform

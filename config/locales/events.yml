@@ -130,6 +130,7 @@ en:
       desktop: "Desktop"
       remind_start_event: "Event start after 30 minutes"
       remind_delete_event: "Event is deleted!"
+      remind_delete_all_event: "All Event is deleted!"
       remind_create: "Event created!"
       title_default: "No title"
     overlap:
