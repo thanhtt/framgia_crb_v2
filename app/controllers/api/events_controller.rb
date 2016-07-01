@@ -112,8 +112,10 @@ class Api::EventsController < ApplicationController
   end
 
   def destroy_event event
+    event_temp = event.dup
+    event_temp.attendees = event.attendees
     if event.destroy
-      NotificationDesktopService.new(@event, Settings.destroy_all_event).perform
+      NotificationDesktopService.new(event_temp, Settings.destroy_all_event).perform
       render json: {message: t("events.flashs.deleted")}, status: :ok
     else
       render json: {message: t("events.flashs.not_deleted")}
@@ -131,15 +133,24 @@ class Api::EventsController < ApplicationController
       dup_event.exception_type = exception_type
       dup_event.exception_time = exception_time
       dup_event.parent_id = parent.id
-
-      unless @event.all_day?
+      parent.attendees.each do |attendee|
+        dup_event.attendees.new(user_id: attendee.user_id,
+          event_id: dup_event.id)
+      end
+      if @event.all_day?
+        dup_event.start_date = exception_time.to_datetime.beginning_of_day
+        dup_event.finish_date = exception_time.to_datetime.end_of_day
+      else
         dup_event.start_date = start_date_before_delete
         dup_event.finish_date = finish_date_before_delete
       end
       if exception_type == "delete_all_follow"
         event_exception_pre_nearest(parent, exception_time).update(end_repeat: (exception_time.to_date - 1.day))
+        NotificationDesktopService.new(dup_event,
+          Settings.destroy_all_following_event).perform
       end
 
+      NotificationDesktopService.new(dup_event, Settings.destroy_event).perform
       return dup_event.save
     end
 

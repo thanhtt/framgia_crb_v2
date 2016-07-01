@@ -34,6 +34,10 @@ class EventExceptionService
         @event.update_attributes @event_params
       end
     end
+    @event.attendees.each do|attendee|
+      @event_after_update.attendees.new(user_id: attendee.user_id,
+        event_id: @event_after_update.id)
+    end
 
     if @event_after_update.present?
       argv =  {event_before_update_id: @event.id,
@@ -42,6 +46,16 @@ class EventExceptionService
         finish_date_before: @finish_time_before_drag
       }
       EmailWorker.perform_async argv, :update_event
+      if @event_params[:exception_type] == "edit_all"
+        NotificationDesktopService.new(@event_after_update,
+          Settings.edit_all_event).perform
+      elsif @event_params[:exception_type] == "edit_all_follow"
+        NotificationDesktopService.new(@event_after_update,
+          Settings.edit_all_following_event).perform
+      else
+        NotificationDesktopService.new(@event_after_update,
+          Settings.edit_event).perform
+      end
     end
   end
 

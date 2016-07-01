@@ -134,8 +134,12 @@ en:
       remind_start_event: "Event start after 30 minutes"
       remind_delete_event: "Event is deleted!"
       remind_delete_all_event: "All Event is deleted!"
+      remind_delete_all_following_event: "All Following Event is deleted"
       remind_create: "Event created!"
       title_default: "No title"
+      remind_edit_event: "Event is edited!"
+      remind_edit_all_event: "All Event is edited!"
+      remind_edit_all_following_event: "All The Following Events is edited"
     overlap:
       fulloverlap: "Event Overlap!"
       do_you_want_create: "Event overlap! Do you want create?"

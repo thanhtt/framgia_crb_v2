@@ -300,6 +300,7 @@ $(document).on('page:change', function() {
       if ($(this).attr('rel') != null){
         var check_is_delete = $(this).attr('rel').indexOf(I18n.t('events.repeat_dialog.delete.delete'));
         if (check_is_delete != -1){
+          $('.btn-confirm').unbind('click');
           deleteEvent(event, $(this).attr('rel'));
           hiddenDialog('dialog-repeat-popup');
         }
