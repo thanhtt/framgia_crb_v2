@@ -36,10 +36,6 @@ class EventExceptionService
         @event.update_attributes @event_params
       end
     end
-    @event.attendees.each do|attendee|
-      @event_after_update.attendees.new(user_id: attendee.user_id,
-        event_id: @event_after_update.id)
-    end
 
     if @event_after_update.present?
       argv =  {event_before_update_id: @event.id,
@@ -97,23 +93,29 @@ class EventExceptionService
     if event.event_parent.present?
       @event_after_update = event
     else
-      @event_params[:parent_id] = @event.id
-      @event_params.delete :id
-      @event_after_update = @event.dup
+      @event_after_update = @event.deep_clone include: [:notification_events, :attendees]
       @event_after_update.parent_id = @event.id
     end
+
+    @event_after_update.notification_events.each do |notify|
+      notify.save
+    end
+    @event_after_update.attendees.each do |attendee|
+      attendee.save
+    end
+
     @event_after_update.save
-    if @event_params[:notification_events_attributes].present?
-      @event_params[:notification_events_attributes].each do |key, notify|
-        if notify["_destroy"] == "false"
-          @event_after_update.notification_events
-            .create(event_id: @event_after_update.id,
-            notification_id: notify[:notification_id])
-        end
+    @event_params[:notification_events_attributes].each do |key, value|
+      if value["id"]
+        @event_params[:notification_events_attributes].delete key
       end
     end
-    @event_params[:id]= @event_after_update.id
-    @event_params.delete :notification_events_attributes
+    @event_params[:attendees_attributes].each do |key, value|
+      if value["id"]
+        @event_params[:attendees_attributes].delete key
+      end
+    end
+
     @event_after_update.update_attributes @event_params.permit!
     self.new_event = @event_after_update
   end
