@@ -2,12 +2,13 @@ class Api::EventsController < ApplicationController
   include TimeOverlapForUpdate
   include Authenticable
 
+  skip_before_filter :authenticate_user!, :verify_authenticity_token, only: :create
   respond_to :json
   before_action only: [:edit, :update, :destroy] do
     load_event
     validate_permission_change_of_calendar @event.calendar
   end
-  before_action :authenticate_with_token!, only: [:create, :index]
+  before_action :authenticate_with_token!, only: [:create, :show, :index]
 
   def index
     if params[:page].present? || params[:calendar_id]

@@ -1,7 +1,7 @@
 class Api::SessionsController < ApplicationController
   protect_from_forgery with: :null_session
   skip_before_filter :authenticate_user!, :verify_authenticity_token,
-    if: Proc.new {|proc| proc.request.format == "application/json"}
+    only: :create
   respond_to :json
 
   def create
