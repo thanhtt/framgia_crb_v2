@@ -24,3 +24,11 @@ en:
   api:
     invalid_email_or_password: "Invalid email or password"
     success_sign_out: "Sign out success!"
+    failed_sign_out: "Sign out failed!"
+    invalid_params: "Invalid Params"
+    request_success: "Request Success!"
+    event_overlap: "Event Overlap"
+    create_event_failed: "Create Event Failed!"
+    create_event_success: "Create Event Success!"
+    show_detail_event_suceess: "Show Detail Event Success!"
+    login_success: "Login Success!"

@@ -1,14 +1,16 @@
 class Api::EventsController < ApplicationController
   include TimeOverlapForUpdate
   include Authenticable
-  respond_to :json
+  include CreateNewObject
 
+  respond_to :json
   skip_before_action :authenticate_user!
   before_action :authenticate_with_token!
   before_action only: [:edit, :update, :destroy] do
     load_event
     validate_permission_change_of_calendar @event.calendar
   end
+
   def index
     if params[:page].present? || params[:calendar_id]
       @data = current_user.events.upcoming_event(params[:calendar_id])
@@ -21,16 +23,36 @@ class Api::EventsController < ApplicationController
     else
       @events = Event.in_calendars params[:calendars]
       @events = FullcalendarService.new(@events).repeat_data
-      render json: @events.map{|event| event.json_data(current_user.id)}
+
+      if params[:calendars].present?
+        render json: {
+          message: t("api.request_success"),
+          events: @events.map{|event| event.json_data(current_user.id)}
+        }, status: :ok
+      else
+        render json: {error: I18n.t("api.invalid_params")}
+      end
     end
   end
 
   def create
-    event = current_user.events.build event_params
-    if event.save
-      render json: event
+    create_user_when_add_attendee
+    create_place_when_add_location
+
+    @event = current_user.events.build event_params
+    event_overlap = EventOverlap.new @event
+    if event_overlap.overlap?
+      @time_overlap = load_overlap_time event_overlap
+      render json: {message: I18n.t("api.event_overlap")}
     else
-      render json: {errors: event.errors}, status: 422
+      if @event.save
+        render json: {
+          message: t("api.create_event_success"),
+          events: @event
+        }, status: :ok
+      else
+        render json: {errors: I18n.t("api.create_event_failed")}, status: 422
+      end
     end
   end
 
@@ -87,7 +109,10 @@ class Api::EventsController < ApplicationController
             fdata: Base64.urlsafe_encode64(locals)
           }
       }
-      format.json {render json: @event}
+      format.json {render json: {
+        message: t("api.show_detail_event_suceess"),
+        event: @event
+      }}
     end
   end
 
@@ -194,5 +219,16 @@ class Api::EventsController < ApplicationController
     events = parent.event_exceptions
       .follow_pre_nearest(exception_time).order(start_date: :desc)
     events.size > 0 ? events.first : parent
+  end
+
+  def load_overlap_time event_overlap
+    if @event.start_repeat.nil? ||
+      (@event.start_repeat.to_date >= event_overlap.time_overlap.to_date)
+      return Settings.full_overlap
+    else
+      time_overlap = (event_overlap.time_overlap - 1.day).to_s
+      event_params[:end_repeat] = time_overlap
+      return time_overlap
+    end
   end
 end

@@ -41,21 +41,21 @@ $(document).on('page:change', function() {
       $('input:checkbox[class=calendar-select]:checked').each(function() {
         calendars.push($(this).val());
       });
-      var auth = $('body').attr('auth');
+      var auth_token = $('body').attr('auth');
       var start_time_view = $('#full-calendar').fullCalendar('getView').start;
       var end_time_view = $('#full-calendar').fullCalendar('getView').end;
       $.ajax({
         url: '/api/events',
         data: {
           calendars: calendars,
-          authentication: auth,
+          auth_token: auth_token,
           start_time_view: start_time_view.format(),
           end_time_view: end_time_view.format(),
         },
         dataType: 'json',
         success: function(doc) {
           var events = [];
-          events = doc.map(function(data) {
+          events = doc.events.map(function(data) {
             return {
               title: data.title,
               start: data.start_date,
@@ -181,7 +181,7 @@ $(document).on('page:change', function() {
     $.ajax({
       url: 'api/events/' + event.event_id,
       data: {
-        authentication: auth_token,
+        auth_token: auth_token,
         title: event.title,
         start: event.start.format('MM-DD-YYYY H:mm A'),
         end: (event.end !== null) ? event.end.format('MM-DD-YYYY H:mm A') : ''
@@ -258,7 +258,7 @@ $(document).on('page:change', function() {
       url: '/api/events/' + event.event_id,
       type: 'DELETE',
       data: {
-        authentication: auth_token,
+        auth_token: auth_token,
         exception_type: exception_type,
         exception_time: event.start.format(),
         finish_date: (event.end !== null) ? event.end.format('MM-DD-YYYY H:mm A') : '',
@@ -346,7 +346,7 @@ $(document).on('page:change', function() {
     $.ajax({
       url: '/api/events/' + event.event_id,
       data: {
-        authentication: auth_token,
+        auth_token: auth_token,
         event: {
           title: event.title,
           start_date: start_date.format(),

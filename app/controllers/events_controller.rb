@@ -1,5 +1,6 @@
 class EventsController < ApplicationController
   include TimeOverlapForUpdate
+  include CreateNewObject
 
   load_and_authorize_resource
   skip_before_action :authenticate_user!, only: :show
@@ -38,7 +39,6 @@ class EventsController < ApplicationController
     @event = current_user.events.new event_params
 
     event_overlap = EventOverlap.new(@event)
-
     if event_overlap.overlap?
       @time_overlap = load_overlap_time(event_overlap)
       respond_to do |format|
@@ -146,29 +146,6 @@ class EventsController < ApplicationController
       time_overlap = (event_overlap.time_overlap - 1.day).to_s
       event_params[:end_repeat] = time_overlap
       return time_overlap
-    end
-  end
-
-  def create_user_when_add_attendee
-    if params[:event][:attendees_attributes].present?
-      params[:event][:attendees_attributes].each do |key, attendee|
-        generated_password = Devise.friendly_token.first(8)
-        unless User.existed_email? attendee["email"]
-          new_user = User.create(email: attendee["email"],
-            name: attendee["email"], password: :generated_password)
-          params[:event][:attendees_attributes][key]["user_id"] =
-            new_user.id.to_s
-        end
-      end
-    end
-  end
-
-  def create_place_when_add_location
-    if params[:name].present?
-      unless Place.existed_place? params[:name]
-        new_place = Place.create(name: params[:name], user_id: current_user.id)
-        params[:event][:place_id] = new_place.id.to_s
-      end
     end
   end
 
