@@ -51,9 +51,7 @@ class Api::EventsController < ApplicationController
       if @event.save
         render json: {
           message: t("api.create_event_success"),
-          events: @event.as_json(include: [:attendees, :repeat_ons, :days_of_weeks,
-          :event_exceptions, :notification_events, :notifications, :calendar,
-          :owner, :event_parent, :place])
+          event: EventSerializer.new(@event)
         }, status: :ok
       else
         render json: {errors: I18n.t("api.create_event_failed")}, status: 422
@@ -117,10 +115,9 @@ class Api::EventsController < ApplicationController
       }
       format.json {render json: {
         message: t("api.show_detail_event_suceess"),
-        event: @event.as_json(include: [:attendees, :repeat_ons, :days_of_weeks,
-          :event_exceptions, :notification_events, :notifications, :calendar,
-          :owner, :event_parent, :place])
+        event: EventSerializer.new(@event)
       }}
+
     end
   end
 
